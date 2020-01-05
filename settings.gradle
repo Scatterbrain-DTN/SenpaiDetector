@@ -1,0 +1,3 @@
+include ':app'
+include ':uScatterbrain:app'
+rootProject.name='SenpaiDetector2'
