@@ -1,0 +1,3 @@
+[submodule "uScatterbrain"]
+	path = uScatterbrain
+	url = gogs@git.ballmerlabs.net:Scatterbrain/uScatterbrain.git
