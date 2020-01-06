@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -54,13 +55,13 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void updateLogs() {
-        mLogsTextView.setText("log update pending...");
+        mLogsTextView.setText("");
         try {
             Process proc = Runtime.getRuntime().exec("logcat -d");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String l = bufferedReader.readLine();
             while (l != null) {
-                mLogsTextView.append(l);
+                mLogsTextView.append(l + "\n");
                 l = bufferedReader.readLine();
             }
         } catch(Exception e) {
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
         mStatusTextView = (TextView) findViewById(R.id.status);
 
         mLogsTextView = (TextView) findViewById(R.id.logstextview);
+        mLogsTextView.setMovementMethod(new ScrollingMovementMethod());
 
         mServiceToggle = (Switch) findViewById(R.id.servicetoggle);
         mServiceToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
