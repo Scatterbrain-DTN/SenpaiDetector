@@ -16,12 +16,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
 
 import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             ScatterRoutingService.ScatterBinder binder = (ScatterRoutingService.ScatterBinder) service;
             mService = binder.getService();
+            DeviceProfile dp = new DeviceProfile(DeviceProfile.HardwareServices.BLUETOOTHLE, UUID.randomUUID());
+            mService.setProfile(dp);
             mService.startService();
             mBound = true;
             mServiceToggle.setChecked(true);
@@ -111,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
                             mStatusTextView.setText("STOPPED");
                     } else {
                         mService.scanOn(null);
+                        mService.advertiseOn();
                         mStatusTextView.setText("DISCOVERING");
                     }
                 }
