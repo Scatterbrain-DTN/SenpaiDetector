@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
             mService = binder.getService();
             DeviceProfile dp = new DeviceProfile(DeviceProfile.HardwareServices.BLUETOOTHLE, UUID.randomUUID());
             mService.setProfile(dp);
-            mService.startService();
             mBound = true;
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
@@ -90,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(!isChecked) {
                     if(mBound) {
-                        mService.stopService();
                         mService.scanOff(null);
                         mStatusTextView.setText("STOPPED");
                         unbindService(mServiceConnection);
@@ -101,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        mServiceToggle.setChecked(true);
 
         mDiscoveryToggle = (Switch) findViewById(R.id.discoverytoggle);
         mDiscoveryToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
