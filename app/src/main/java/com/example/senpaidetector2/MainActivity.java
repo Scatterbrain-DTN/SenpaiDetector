@@ -67,9 +67,24 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onPeersChanged(Map<BluetoothDevice, UUID> peers) {
                     mLogsTextView.setText("found " + peers.size() + " peers");
+                    stopScan();
                 }
             });
-            mService.getRadioModule().scan();
+            try {
+                mService.getRadioModule().startDiscover();
+            } catch (ScatterPeerHandler.AdvertiseFailedException e) {
+                mLogsTextView.setText("failed to start discovery");
+            }
+        }
+    }
+
+    private void stopScan() {
+        if (mService != null && mBound) {
+            try {
+                mService.getRadioModule().stopDiscover();
+            } catch (ScatterPeerHandler.AdvertiseFailedException e) {
+                mLogsTextView.setText("failed to stop discovery");
+            }
         }
     }
 
@@ -81,8 +96,7 @@ public class MainActivity extends AppCompatActivity {
             String l = bufferedReader.readLine();
             while (l != null) {
                 mLogsTextView.append(l + "\n");
-                l = bufferedReader.readLine();        mDiscoveryToggle.setChecked(true);
-
+                l = bufferedReader.readLine();
             }
         } catch(Exception e) {
             Log.e(TAG, "failed to update logs: " + e.toString());
