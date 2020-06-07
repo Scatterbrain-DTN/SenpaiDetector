@@ -63,28 +63,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().setOnPeersChanged(new ScatterPeerHandler.PeersChangedCallback() {
-                @Override
-                public void onPeersChanged(Map<BluetoothDevice, UUID> peers) {
-                    mLogsTextView.setText("found " + peers.size() + " peers");
-                    stopScan();
-                }
+            mService.getRadioModule().setOnPeersChanged(peermap -> {
+                mLogsTextView.setText("found " + peermap.size() + " peers");
+                return null;
             });
-            try {
-                mService.getRadioModule().startDiscover();
-            } catch (ScatterPeerHandler.AdvertiseFailedException e) {
-                mLogsTextView.setText("failed to start discovery");
-            }
+            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_ONCE);
         }
     }
 
     private void stopScan() {
         if (mService != null && mBound) {
-            try {
-                mService.getRadioModule().stopDiscover();
-            } catch (ScatterPeerHandler.AdvertiseFailedException e) {
-                mLogsTextView.setText("failed to stop discovery");
-            }
+            mService.getRadioModule().stopDiscover();
         }
     }
 
