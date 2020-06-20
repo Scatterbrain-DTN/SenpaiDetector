@@ -1,3 +1,5 @@
 include ':app'
 include ':uScatterbrain:app'
+include ':ble'
+project(':ble').projectDir = file('uScatterbrain/Android-BLE-Library/ble')
 rootProject.name='SenpaiDetector2'
