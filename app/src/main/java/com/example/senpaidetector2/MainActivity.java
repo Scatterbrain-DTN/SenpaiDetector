@@ -1,8 +1,5 @@
 package com.example.senpaidetector2;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.bluetooth.BluetoothDevice;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,15 +14,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.ScatterPeerHandler;
 
-import org.w3c.dom.Text;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Map;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -63,10 +59,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().setOnPeersChanged(peermap -> {
-                mLogsTextView.setText("found " + peermap.size() + " peers");
-                return null;
-            });
             mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_ONCE);
         }
     }
