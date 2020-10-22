@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_ONCE);
+            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_FOREVER);
         }
     }
 
@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         mService.scanOn(null);
                         mService.advertiseOn();
+                        mService.getRadioModule().startServer();
                         mStatusTextView.setText("DISCOVERING");
                     }
                 }
