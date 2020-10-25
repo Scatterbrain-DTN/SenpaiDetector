@@ -17,11 +17,15 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
+import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
+import com.example.uscatterbrain.network.AdvertisePacket;
 import com.example.uscatterbrain.network.ScatterPeerHandler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_FOREVER);
+            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_ONCE);
         }
     }
 
