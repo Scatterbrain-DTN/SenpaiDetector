@@ -35,5 +35,16 @@ pipeline {
                 )
             }
         }
+        stage('Upload artifacts') {
+            steps {
+                telegramUploader(
+                    chatId: '-1001163314914',
+                    filter: 'SignApksBuilder-out/android-dev/piracy/app-release-unsigned.apk/app-release.apk',
+                    caption: "Build ${env.JOB_NAME}",
+                    silent: true,
+                    failBuildIfUploadFailed: true
+                )
+            }
+        }
     }
 }
