@@ -13,7 +13,6 @@ pipeline {
         stage('Build RxAndroidBle') {
             steps {
                 dir('RxAndroidBle') {
-                    git branch: 'gatt-server', url: 'https://github.com/gnu3ra/RxAndroidBle.git'
                     withGradle {
                         sh './gradlew assembleRelease test uploadArchives'
                     }
