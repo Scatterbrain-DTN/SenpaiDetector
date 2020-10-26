@@ -40,7 +40,7 @@ pipeline {
                 telegramUploader(
                     chatId: '-1001163314914',
                     filter: 'SignApksBuilder-out/android-dev/piracy/app-release-unsigned.apk/app-release.apk',
-                    caption: "Build ${env.JOB_NAME}",
+                    caption: "Build ${env.BUILD_TAG}",
                     silent: true,
                     failBuildIfUploadFailed: true
                 )
