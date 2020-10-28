@@ -17,15 +17,11 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
-import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
-import com.example.uscatterbrain.network.AdvertisePacket;
 import com.example.uscatterbrain.network.ScatterPeerHandler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -50,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
             mBound = true;
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
+            mService.scanOn(null);
+            mService.advertiseOn();
+            mService.getRadioModule().startServer();
+            mStatusTextView.setText("DISCOVERING");
             Log.v(TAG, "connected to ScatterRoutingService binder");
         }
 
@@ -125,27 +125,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 mLogsTextView.setText("Scanning...");
                 scan();
-            }
-        });
-
-        mDiscoveryToggle = (Switch) findViewById(R.id.discoverytoggle);
-        mDiscoveryToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(mBound) {
-                    if (!isChecked) {
-                        mService.scanOn(null);
-                        if(mBound)
-                            mStatusTextView.setText("RUNNING");
-                        else
-                            mStatusTextView.setText("STOPPED");
-                    } else {
-                        mService.scanOn(null);
-                        mService.advertiseOn();
-                        mService.getRadioModule().startServer();
-                        mStatusTextView.setText("DISCOVERING");
-                    }
-                }
             }
         });
 
