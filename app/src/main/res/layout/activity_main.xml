@@ -64,12 +64,33 @@
             app:layout_constraintTop_toBottomOf="@+id/status" />
 
         <Button
+            android:id="@+id/creategroupbutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="create group"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/updatelogsbutton" />
+
+        <Button
+            android:id="@+id/connectgroupbutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="connect group"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/creategroupbutton"
+            app:layout_constraintTop_toBottomOf="@+id/updatelogsbutton" />
+
+        <Button
             android:id="@+id/scanbutton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Scan"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/updatelogsbutton" />
+            app:layout_constraintEnd_toStartOf="@+id/updatelogsbutton"
+            app:layout_constraintTop_toBottomOf="@+id/statustext" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView

@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mLogsTextView;
     private Button mRefreshLogsButton;
     private Button mScanButton;
+    private Button mConnectGroupButton;
+    private Button mCreateGroupButton;
     private boolean mBound;
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -93,6 +95,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mBound = false;
+
+        mCreateGroupButton = (Button) findViewById(R.id.creategroupbutton);
+        mConnectGroupButton = (Button) findViewById(R.id.connectgroupbutton);
+
+        mCreateGroupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mService.getWifiDirect().createGroup();
+            }
+        });
+
+
+        mConnectGroupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mService.getWifiDirect().connectToGroup();
+            }
+        });
 
         mStatusTextView = (TextView) findViewById(R.id.status);
 
