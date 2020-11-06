@@ -18,7 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
-import com.example.uscatterbrain.network.ScatterPeerHandler;
+import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().startDiscover(ScatterPeerHandler.discoveryOptions.OPT_DISCOVER_ONCE);
+            mService.getRadioModule().startDiscover(BluetoothLEModule.discoveryOptions.OPT_DISCOVER_ONCE);
         }
     }
 
