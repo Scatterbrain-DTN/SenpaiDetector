@@ -18,11 +18,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
+import com.example.uscatterbrain.network.BlockHeaderPacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
+import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
+import com.google.protobuf.ByteString;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.UUID;
+
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,6 +45,16 @@ public class MainActivity extends AppCompatActivity {
     private Button mConnectGroupButton;
     private Button mCreateGroupButton;
     private boolean mBound;
+    private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
+            .setApplication("fmef".getBytes())
+            .setBlockSize(512)
+            .setHashes(new ArrayList<>())
+            .setSessionID(1)
+            .setSig(ByteString.copyFrom(new byte[8]))
+            .setToDisk(true)
+            .setFromFingerprint(ByteString.copyFrom(new byte[8]))
+            .setToFingerprint(ByteString.copyFrom(new byte[8]))
+            .build();
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -46,6 +64,19 @@ public class MainActivity extends AppCompatActivity {
             DeviceProfile dp = new DeviceProfile(DeviceProfile.HardwareServices.BLUETOOTHLE, UUID.randomUUID());
             mService.setProfile(dp);
             mBound = true;
+            Disposable d = mService.getRadioModule().getOnUpgrade()
+                    .subscribe(upgradeRequest ->
+                            mService.getWifiDirect().bootstrapFromUpgrade(
+                                    upgradeRequest,
+                                    Observable.just(new WifiDirectRadioModule.BlockDataStream(
+                                            headerPacket,
+                                            Flowable.empty()
+                                    ))
+                            ).subscribe(
+                                    ok -> Log.v(TAG, "successfually transfered blockdata"),
+                                    err -> Log.e(TAG, "failed to transfer blockdata: " + err)
+                            )
+                    );
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
             mService.scanOn(null);
