@@ -75,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
                             ).subscribe(
                                     ok -> Log.v(TAG, "successfually transfered blockdata"),
                                     err -> Log.e(TAG, "failed to transfer blockdata: " + err)
-                            )
+                            ),
+                            error -> Log.v(TAG, "getOnUpgrade returned error " + error)
                     );
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
