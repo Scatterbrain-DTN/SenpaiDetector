@@ -134,7 +134,11 @@ public class MainActivity extends AppCompatActivity {
         mCreateGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mService.getWifiDirect().createGroup();
+                Disposable d = mService.getWifiDirect().createGroup()
+                        .subscribe(
+                                () -> Log.v(TAG, "group created successfully"),
+                                err -> Log.e(TAG, "failed to create group: " + err)
+                        );
             }
         });
 
