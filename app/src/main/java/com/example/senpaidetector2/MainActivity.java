@@ -17,8 +17,10 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
+import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
+import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
@@ -26,6 +28,7 @@ import com.google.protobuf.ByteString;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 import io.reactivex.Flowable;
@@ -45,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mConnectGroupButton;
     private Button mCreateGroupButton;
     private boolean mBound;
+    private Disposable p2pdisposable;
     private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
             .setApplication("fmef".getBytes())
             .setBlockSize(512)
@@ -64,20 +68,6 @@ public class MainActivity extends AppCompatActivity {
             DeviceProfile dp = new DeviceProfile(DeviceProfile.HardwareServices.BLUETOOTHLE, UUID.randomUUID());
             mService.setProfile(dp);
             mBound = true;
-            Disposable d = mService.getRadioModule().getOnUpgrade()
-                    .subscribe(upgradeRequest ->
-                            mService.getWifiDirect().bootstrapFromUpgrade(
-                                    upgradeRequest,
-                                    Observable.just(new WifiDirectRadioModule.BlockDataStream(
-                                            headerPacket,
-                                            Flowable.empty()
-                                    ))
-                            ).subscribe(
-                                    ok -> Log.v(TAG, "successfually transfered blockdata"),
-                                    err -> Log.e(TAG, "failed to transfer blockdata: " + err)
-                            ),
-                            error -> Log.v(TAG, "getOnUpgrade returned error " + error)
-                    );
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
             mService.scanOn(null);
@@ -122,6 +112,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void tryP2pConnection(BluetoothLEModule.ConnectionRole role) {
+        BluetoothLEModule.UpgradeRequest request = BluetoothLEModule.UpgradeRequest.create(
+                role,
+                UpgradePacket.newBuilder()
+                        .setSessionID(1)
+                        .setMetadata(WifiDirectRadioModule.UPGRADE_METADATA)
+                        .setProvides(ScatterProto.Advertise.Provides.WIFIP2P)
+                        .build());
+        if (p2pdisposable != null) {
+            p2pdisposable.dispose();
+        }
+        p2pdisposable = mService.getWifiDirect().bootstrapFromUpgrade(
+                request,
+                Observable.just(new WifiDirectRadioModule.BlockDataStream(
+                        headerPacket,
+                        Flowable.empty()
+                ))
+        ).subscribe(
+                ok -> Log.v(TAG, "successfually transfered blockdata"),
+                err -> {
+                    Log.e(TAG, "failed to transfer blockdata: " + err);
+                }
+        );
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,11 +149,7 @@ public class MainActivity extends AppCompatActivity {
         mCreateGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Disposable d = mService.getWifiDirect().createGroup()
-                        .subscribe(
-                                () -> Log.v(TAG, "group created successfully"),
-                                err -> Log.e(TAG, "failed to create group: " + err)
-                        );
+                tryP2pConnection(BluetoothLEModule.ConnectionRole.ROLE_UKE);
             }
         });
 
@@ -146,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         mConnectGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mService.getWifiDirect().connectToGroup();
+                tryP2pConnection(BluetoothLEModule.ConnectionRole.ROLE_SEME);
             }
         });
 
