@@ -1,11 +1,13 @@
 package com.example.senpaidetector2;
 
+import android.bluetooth.BluetoothGatt;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelUuid;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -20,20 +22,37 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
+import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
+import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
+import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
+import com.example.uscatterbrain.network.bluetoothLE.CachedLEServerConnection;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
+import com.polidea.rxandroidble2.RxBleClient;
+import com.polidea.rxandroidble2.RxBleDevice;
+import com.polidea.rxandroidble2.RxBleServer;
+import com.polidea.rxandroidble2.ServerConfig;
+import com.polidea.rxandroidble2.Timeout;
+import com.polidea.rxandroidble2.scan.ScanFilter;
+import com.polidea.rxandroidble2.scan.ScanSettings;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.BehaviorSubject;
+
+import static com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl.SERVICE_UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,8 +66,13 @@ public class MainActivity extends AppCompatActivity {
     private Button mScanButton;
     private Button mConnectGroupButton;
     private Button mCreateGroupButton;
+    private Button mManualButton;
+    private Button mClientButton;
+    private RxBleServer mServer;
     private boolean mBound;
     private Disposable p2pdisposable;
+    private Disposable manualDisposable = null;
+    private final ConcurrentHashMap<String, Observable<CachedLEConnection>> connectionCache = new ConcurrentHashMap<>();
     private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
             .setApplication("fmef".getBytes())
             .setBlockSize(512)
@@ -137,6 +161,68 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    public void manualServer(RxBleClient client) {
+        mServer = RxBleServer.create(getApplicationContext());
+        ServerConfig config = ServerConfig.newInstance(new Timeout(5, TimeUnit.SECONDS))
+                .addService(BluetoothLERadioModuleImpl.mService);
+
+        mServer.openServer(config)
+                .flatMapCompletable(connectionRaw -> {
+                    CachedLEServerConnection connection = new CachedLEServerConnection(connectionRaw);
+                    RxBleDevice device = client.getBleDevice(connection.getConnection().getDevice().getAddress());
+                    connection.setDefaultReply(
+                            BluetoothLERadioModuleImpl.UUID_LUID,
+                            BluetoothGatt.GATT_SUCCESS
+                    );
+                    connection.serverNotify(
+                            LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
+                            BluetoothLERadioModuleImpl.UUID_LUID
+                    ).subscribe();
+                    return establishConnection(device, new Timeout(10, TimeUnit.SECONDS))
+                            .flatMapSingle(CachedLEConnection::readLuid)
+                            .doOnNext(bytes -> Log.v(TAG, "received luid: " + bytes))
+                            .ignoreElements();
+                })
+                .subscribe(new CompletableObserver() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        Log.v(TAG, "gatt server onSubscribe");
+                        manualDisposable = d;
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.v(TAG, "gatt server onComplete");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "gatt server onError: " + e);
+                    }
+                });
+
+
+    }
+
+    private Observable<CachedLEConnection> establishConnection(RxBleDevice device, Timeout timeout) {
+
+        Observable<CachedLEConnection> conn = connectionCache.get(device.getMacAddress());
+        if (conn != null) {
+            return conn;
+        }
+        BehaviorSubject<CachedLEConnection> subject = BehaviorSubject.create();
+        connectionCache.put(device.getMacAddress(), subject);
+        return device.establishConnection(false, timeout)
+                .doOnDispose(() -> connectionCache.remove(device.getMacAddress()))
+                .doOnError(err -> connectionCache.remove(device.getMacAddress()))
+                .map(CachedLEConnection::new)
+                .doOnNext(connection -> {
+                    Log.v(TAG, "successfully established connection");
+                    subject.onNext(connection);
+                });
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -192,6 +278,67 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 mLogsTextView.setText("Scanning...");
                 scan();
+            }
+        });
+
+
+        mManualButton = (Button) findViewById(R.id.manualbutton);
+
+        mManualButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mServer = RxBleServer.create(getApplicationContext());
+                ServerConfig config = ServerConfig.newInstance(new Timeout(5, TimeUnit.SECONDS))
+                        .addService(BluetoothLERadioModuleImpl.mService);
+
+                if (manualDisposable != null) {
+                    manualDisposable.dispose();
+                    manualDisposable = null;
+                    mStatusTextView.setText("Discovering...");
+                    mService.getRadioModule().startServer();
+                    return;
+                }
+
+                mService.getRadioModule().stopDiscover();
+                mService.getRadioModule().stopServer();
+                mStatusTextView.setText("manual gatt");
+                manualServer(RxBleClient.create(getApplicationContext()));
+            }
+        });
+
+        mClientButton = findViewById(R.id.manual_client);
+
+        mClientButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (manualDisposable != null) {
+                    manualDisposable.dispose();
+                    manualDisposable = null;
+                    mStatusTextView.setText("Discovering...");
+                    mService.getRadioModule().startServer();
+                    return;
+                }
+
+                mService.getRadioModule().stopDiscover();
+                mService.getRadioModule().stopServer();
+                mStatusTextView.setText("manual gatt client");
+
+                RxBleClient client = RxBleClient.create(getApplicationContext());
+                manualServer(client);
+
+                client.scanBleDevices(
+                        new ScanSettings.Builder()
+                                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                                .setShouldCheckLocationServicesState(true)
+                                .build(),
+                        new ScanFilter.Builder()
+                                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
+                                .build())
+                        .concatMap(conn -> {
+                            return establishConnection(conn.getBleDevice(), new Timeout(10, TimeUnit.SECONDS));
+                        }).subscribe();
+
             }
         });
 
