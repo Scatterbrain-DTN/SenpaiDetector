@@ -20,9 +20,11 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
+import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
+import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.RxBleServer;
@@ -37,6 +39,7 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
@@ -228,11 +231,14 @@ public class MainActivity extends AppCompatActivity {
                 mService.getRadioModule().stopServer();
                 mStatusTextView.setText("manual gatt");
                 mServer.openServer(config)
-                        .flatMapCompletable(connection -> connection.setupNotifications(
-                                BluetoothLERadioModuleImpl.UUID_LUID,
-                                Flowable.interval(1, TimeUnit.SECONDS)
-                                .map(l -> new byte[]{l.byteValue()})
-                                ))
+                        .flatMapCompletable(connection -> {
+                            GattServerConnectionConfig.serverNotify(
+                                    connection,
+                                    LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
+                                    BluetoothLERadioModuleImpl.UUID_LUID
+                            );
+                            return Completable.never();
+                        })
                         .subscribe(new CompletableObserver() {
                             @Override
                             public void onSubscribe(@NonNull Disposable d) {
