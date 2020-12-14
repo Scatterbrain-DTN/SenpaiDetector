@@ -22,17 +22,25 @@ import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
+import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
+import com.polidea.rxandroidble2.RxBleServer;
+import com.polidea.rxandroidble2.ServerConfig;
+import com.polidea.rxandroidble2.Timeout;
+import com.polidea.rxandroidble2.internal.operations.TimeoutConfiguration;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,8 +55,11 @@ public class MainActivity extends AppCompatActivity {
     private Button mScanButton;
     private Button mConnectGroupButton;
     private Button mCreateGroupButton;
+    private Button mManualButton;
+    private RxBleServer mServer;
     private boolean mBound;
     private Disposable p2pdisposable;
+    private Disposable manualDisposable = null;
     private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
             .setApplication("fmef".getBytes())
             .setBlockSize(512)
@@ -192,6 +203,53 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 mLogsTextView.setText("Scanning...");
                 scan();
+            }
+        });
+
+
+        mManualButton = (Button) findViewById(R.id.manualbutton);
+
+        mManualButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mServer = RxBleServer.create(getApplicationContext());
+                ServerConfig config = ServerConfig.newInstance(new Timeout(5, TimeUnit.SECONDS))
+                        .addService(BluetoothLERadioModuleImpl.mService);
+
+                if (manualDisposable != null) {
+                    manualDisposable.dispose();
+                    manualDisposable = null;
+                    mStatusTextView.setText("Discovering...");
+                    mService.getRadioModule().startServer();
+                    return;
+                }
+
+                mService.getRadioModule().stopDiscover();
+                mService.getRadioModule().stopServer();
+                mStatusTextView.setText("manual gatt");
+                mServer.openServer(config)
+                        .flatMapCompletable(connection -> connection.setupNotifications(
+                                BluetoothLERadioModuleImpl.UUID_LUID,
+                                Flowable.interval(1, TimeUnit.SECONDS)
+                                .map(l -> new byte[]{l.byteValue()})
+                                ))
+                        .subscribe(new CompletableObserver() {
+                            @Override
+                            public void onSubscribe(@NonNull Disposable d) {
+                                Log.v(TAG, "gatt server onSubscribe");
+                                manualDisposable = d;
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                Log.v(TAG, "gatt server onComplete");
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable e) {
+                                Log.e(TAG, "gatt server onError: " + e);
+                            }
+                        });
             }
         });
 
