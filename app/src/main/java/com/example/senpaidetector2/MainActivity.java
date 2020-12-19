@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelUuid;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -28,10 +29,14 @@ import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
 import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
+import com.polidea.rxandroidble2.NotificationSetupMode;
+import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleServer;
 import com.polidea.rxandroidble2.ServerConfig;
 import com.polidea.rxandroidble2.Timeout;
 import com.polidea.rxandroidble2.internal.operations.TimeoutConfiguration;
+import com.polidea.rxandroidble2.scan.ScanFilter;
+import com.polidea.rxandroidble2.scan.ScanSettings;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -44,8 +49,11 @@ import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+
+import static com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl.SERVICE_UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mConnectGroupButton;
     private Button mCreateGroupButton;
     private Button mManualButton;
+    private Button mClientButton;
     private RxBleServer mServer;
     private boolean mBound;
     private Disposable p2pdisposable;
@@ -262,6 +271,67 @@ public class MainActivity extends AppCompatActivity {
                                 Log.e(TAG, "gatt server onError: " + e);
                             }
                         });
+            }
+        });
+
+        mClientButton = findViewById(R.id.manual_client);
+
+        mClientButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (manualDisposable != null) {
+                    manualDisposable.dispose();
+                    manualDisposable = null;
+                    mStatusTextView.setText("Discovering...");
+                    mService.getRadioModule().startServer();
+                    return;
+                }
+
+                mService.getRadioModule().stopDiscover();
+                mService.getRadioModule().stopServer();
+                mStatusTextView.setText("manual gatt client");
+
+                RxBleClient client = RxBleClient.create(getApplicationContext());
+
+                client.scanBleDevices(
+                        new ScanSettings.Builder()
+                                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                                .setShouldCheckLocationServicesState(true)
+                                .build(),
+                        new ScanFilter.Builder()
+                                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
+                                .build())
+                        .concatMap(scanResult -> {
+                            return scanResult.getBleDevice().establishConnection(false)
+                                    .flatMap(connection -> {
+                                        return connection.setupNotification(BluetoothLERadioModuleImpl.UUID_LUID,
+                                                NotificationSetupMode.QUICK_SETUP)
+                                                .flatMap(obs -> obs);
+                                    });
+                        })
+                        .subscribe(new Observer<byte[]>() {
+                            @Override
+                            public void onSubscribe(@NonNull Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onNext(@NonNull byte[] bytes) {
+                                Log.v(TAG, "received bytes: " + bytes.length);
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable e) {
+                                Log.e(TAG, "error in client: " + e);
+                            }
+
+                            @Override
+                            public void onComplete() {
+
+                            }
+                        });
+
             }
         });
 
