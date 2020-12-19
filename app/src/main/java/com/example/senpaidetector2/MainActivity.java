@@ -232,12 +232,13 @@ public class MainActivity extends AppCompatActivity {
                 mStatusTextView.setText("manual gatt");
                 mServer.openServer(config)
                         .flatMapCompletable(connection -> {
-                            GattServerConnectionConfig.serverNotify(
-                                    connection,
-                                    LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
-                                    BluetoothLERadioModuleImpl.UUID_LUID
-                            );
-                            return Completable.never();
+                            return Completable.fromCallable(() -> {
+                                return GattServerConnectionConfig.serverNotify(
+                                        connection,
+                                        LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
+                                        BluetoothLERadioModuleImpl.UUID_LUID
+                                );
+                            }).delaySubscription(40, TimeUnit.SECONDS);
                         })
                         .subscribe(new CompletableObserver() {
                             @Override
