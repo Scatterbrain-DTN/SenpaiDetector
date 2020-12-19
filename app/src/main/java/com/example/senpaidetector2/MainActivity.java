@@ -31,6 +31,7 @@ import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.NotificationSetupMode;
 import com.polidea.rxandroidble2.RxBleClient;
+import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.RxBleServer;
 import com.polidea.rxandroidble2.ServerConfig;
 import com.polidea.rxandroidble2.Timeout;
@@ -161,6 +162,53 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    public void manualServer(RxBleClient client) {
+        mServer = RxBleServer.create(getApplicationContext());
+        ServerConfig config = ServerConfig.newInstance(new Timeout(5, TimeUnit.SECONDS))
+                .addService(BluetoothLERadioModuleImpl.mService);
+
+        mServer.openServer(config)
+                .flatMapCompletable(connection -> {
+                    RxBleDevice device = client.getBleDevice(connection.getDevice().getAddress());
+                    GattServerConnectionConfig.setDefaultReply(
+                            connection,
+                            BluetoothLERadioModuleImpl.UUID_LUID,
+                            BluetoothGatt.GATT_SUCCESS
+                    );
+                    GattServerConnectionConfig.serverNotify(
+                            connection,
+                            LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
+                            BluetoothLERadioModuleImpl.UUID_LUID
+                    );
+                    return device.establishConnection(false)
+                            .flatMap(conn -> {
+                                return conn.setupNotification(BluetoothLERadioModuleImpl.UUID_LUID,
+                                        NotificationSetupMode.QUICK_SETUP)
+                                        .flatMap(obs -> obs);
+                            }).doOnNext(bytes -> Log.v(TAG, "received bytes: " + bytes.length))
+                            .ignoreElements();
+                })
+                .subscribe(new CompletableObserver() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        Log.v(TAG, "gatt server onSubscribe");
+                        manualDisposable = d;
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.v(TAG, "gatt server onComplete");
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+                        Log.e(TAG, "gatt server onError: " + e);
+                    }
+                });
+
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -240,37 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 mService.getRadioModule().stopDiscover();
                 mService.getRadioModule().stopServer();
                 mStatusTextView.setText("manual gatt");
-                mServer.openServer(config)
-                        .flatMapCompletable(connection -> {
-                            GattServerConnectionConfig.setDefaultReply(
-                                    connection,
-                                    BluetoothLERadioModuleImpl.UUID_LUID,
-                                    BluetoothGatt.GATT_SUCCESS
-                            );
-                            GattServerConnectionConfig.serverNotify(
-                                    connection,
-                                    LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
-                                    BluetoothLERadioModuleImpl.UUID_LUID
-                            );
-                            return Completable.never();
-                        })
-                        .subscribe(new CompletableObserver() {
-                            @Override
-                            public void onSubscribe(@NonNull Disposable d) {
-                                Log.v(TAG, "gatt server onSubscribe");
-                                manualDisposable = d;
-                            }
-
-                            @Override
-                            public void onComplete() {
-                                Log.v(TAG, "gatt server onComplete");
-                            }
-
-                            @Override
-                            public void onError(@NonNull Throwable e) {
-                                Log.e(TAG, "gatt server onError: " + e);
-                            }
-                        });
+                manualServer(RxBleClient.create(getApplicationContext()));
             }
         });
 
@@ -292,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
                 mStatusTextView.setText("manual gatt client");
 
                 RxBleClient client = RxBleClient.create(getApplicationContext());
+                manualServer(client);
 
                 client.scanBleDevices(
                         new ScanSettings.Builder()
@@ -302,35 +321,9 @@ public class MainActivity extends AppCompatActivity {
                         new ScanFilter.Builder()
                                 .setServiceUuid(new ParcelUuid(SERVICE_UUID))
                                 .build())
-                        .concatMap(scanResult -> {
-                            return scanResult.getBleDevice().establishConnection(false)
-                                    .flatMap(connection -> {
-                                        return connection.setupNotification(BluetoothLERadioModuleImpl.UUID_LUID,
-                                                NotificationSetupMode.QUICK_SETUP)
-                                                .flatMap(obs -> obs);
-                                    });
-                        })
-                        .subscribe(new Observer<byte[]>() {
-                            @Override
-                            public void onSubscribe(@NonNull Disposable d) {
-
-                            }
-
-                            @Override
-                            public void onNext(@NonNull byte[] bytes) {
-                                Log.v(TAG, "received bytes: " + bytes.length);
-                            }
-
-                            @Override
-                            public void onError(@NonNull Throwable e) {
-                                Log.e(TAG, "error in client: " + e);
-                            }
-
-                            @Override
-                            public void onComplete() {
-
-                            }
-                        });
+                        .concatMap(conn -> {
+                            return conn.getBleDevice().establishConnection(false);
+                        }).subscribe();
 
             }
         });
