@@ -1,5 +1,6 @@
 package com.example.senpaidetector2;
 
+import android.bluetooth.BluetoothGatt;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -232,13 +233,17 @@ public class MainActivity extends AppCompatActivity {
                 mStatusTextView.setText("manual gatt");
                 mServer.openServer(config)
                         .flatMapCompletable(connection -> {
-                            return Completable.fromCallable(() -> {
-                                return GattServerConnectionConfig.serverNotify(
-                                        connection,
-                                        LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
-                                        BluetoothLERadioModuleImpl.UUID_LUID
-                                );
-                            }).delaySubscription(40, TimeUnit.SECONDS);
+                            GattServerConnectionConfig.setDefaultReply(
+                                    connection,
+                                    BluetoothLERadioModuleImpl.UUID_LUID,
+                                    BluetoothGatt.GATT_SUCCESS
+                            );
+                            GattServerConnectionConfig.serverNotify(
+                                    connection,
+                                    LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
+                                    BluetoothLERadioModuleImpl.UUID_LUID
+                            );
+                            return Completable.never();
                         })
                         .subscribe(new CompletableObserver() {
                             @Override
