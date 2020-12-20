@@ -22,12 +22,12 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
-import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
-import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
+import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
+import com.example.uscatterbrain.network.bluetoothLE.CachedLEServerConnection;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.RxBleClient;
@@ -167,15 +167,14 @@ public class MainActivity extends AppCompatActivity {
                 .addService(BluetoothLERadioModuleImpl.mService);
 
         mServer.openServer(config)
-                .flatMapCompletable(connection -> {
-                    RxBleDevice device = client.getBleDevice(connection.getDevice().getAddress());
-                    GattServerConnectionConfig.setDefaultReply(
-                            connection,
+                .flatMapCompletable(connectionRaw -> {
+                    CachedLEServerConnection connection = new CachedLEServerConnection(connectionRaw);
+                    RxBleDevice device = client.getBleDevice(connection.getConnection().getDevice().getAddress());
+                    connection.setDefaultReply(
                             BluetoothLERadioModuleImpl.UUID_LUID,
                             BluetoothGatt.GATT_SUCCESS
                     );
-                    GattServerConnectionConfig.serverNotify(
-                            connection,
+                    connection.serverNotify(
                             LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
                             BluetoothLERadioModuleImpl.UUID_LUID
                     );
