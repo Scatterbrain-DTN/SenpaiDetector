@@ -26,6 +26,7 @@ import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
+import com.example.uscatterbrain.network.bluetoothLE.GattClientTransaction;
 import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
@@ -180,11 +181,8 @@ public class MainActivity extends AppCompatActivity {
                             BluetoothLERadioModuleImpl.UUID_LUID
                     );
                     return establishConnection(device, new Timeout(10, TimeUnit.SECONDS))
-                            .flatMap(conn -> {
-                                return conn.setupNotification(BluetoothLERadioModuleImpl.UUID_LUID,
-                                        NotificationSetupMode.QUICK_SETUP)
-                                        .flatMap(obs -> obs);
-                            }).doOnNext(bytes -> Log.v(TAG, "received bytes: " + bytes.length))
+                            .flatMapSingle(GattClientTransaction::readLuid)
+                            .doOnNext(bytes -> Log.v(TAG, "received luid: " + bytes))
                             .ignoreElements();
                 })
                 .subscribe(new CompletableObserver() {
