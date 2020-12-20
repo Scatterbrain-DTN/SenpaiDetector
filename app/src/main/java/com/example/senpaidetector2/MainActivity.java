@@ -30,7 +30,6 @@ import com.example.uscatterbrain.network.bluetoothLE.GattClientTransaction;
 import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
-import com.polidea.rxandroidble2.NotificationSetupMode;
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 import com.polidea.rxandroidble2.RxBleDevice;
@@ -52,6 +51,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.BehaviorSubject;
 
 import static com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl.SERVICE_UUID;
 
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mBound;
     private Disposable p2pdisposable;
     private Disposable manualDisposable = null;
-    private final ConcurrentHashMap<String, RxBleConnection> connectionCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Observable<RxBleConnection>> connectionCache = new ConcurrentHashMap<>();
     private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
             .setApplication("fmef".getBytes())
             .setBlockSize(512)
@@ -206,19 +206,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     private Observable<RxBleConnection> establishConnection(RxBleDevice device, Timeout timeout) {
 
-        RxBleConnection conn = connectionCache.get(device.getMacAddress());
+        Observable<RxBleConnection> conn = connectionCache.get(device.getMacAddress());
         if (conn != null) {
-            return Observable.just(conn);
+            return conn;
         }
+        BehaviorSubject<RxBleConnection> subject = BehaviorSubject.create();
+        connectionCache.put(device.getMacAddress(), subject);
         return device.establishConnection(false, timeout)
                 .doOnDispose(() -> connectionCache.remove(device.getMacAddress()))
                 .doOnError(err -> connectionCache.remove(device.getMacAddress()))
                 .doOnNext(connection -> {
                     Log.v(TAG, "successfully established connection");
-                    connectionCache.put(device.getMacAddress(), connection);
+                    subject.onNext(connection);
                 });
     }
 
