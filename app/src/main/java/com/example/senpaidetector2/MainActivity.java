@@ -22,16 +22,15 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
+import com.example.uscatterbrain.network.CachedLEConnection;
 import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
-import com.example.uscatterbrain.network.bluetoothLE.GattClientTransaction;
 import com.example.uscatterbrain.network.bluetoothLE.GattServerConnectionConfig;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.RxBleClient;
-import com.polidea.rxandroidble2.RxBleConnection;
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.RxBleServer;
 import com.polidea.rxandroidble2.ServerConfig;
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mBound;
     private Disposable p2pdisposable;
     private Disposable manualDisposable = null;
-    private final ConcurrentHashMap<String, Observable<RxBleConnection>> connectionCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Observable<CachedLEConnection>> connectionCache = new ConcurrentHashMap<>();
     private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
             .setApplication("fmef".getBytes())
             .setBlockSize(512)
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
                             BluetoothLERadioModuleImpl.UUID_LUID
                     );
                     return establishConnection(device, new Timeout(10, TimeUnit.SECONDS))
-                            .flatMapSingle(GattClientTransaction::readLuid)
+                            .flatMapSingle(CachedLEConnection::readLuid)
                             .doOnNext(bytes -> Log.v(TAG, "received luid: " + bytes))
                             .ignoreElements();
                 })
@@ -206,22 +205,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private Observable<RxBleConnection> establishConnection(RxBleDevice device, Timeout timeout) {
+    private Observable<CachedLEConnection> establishConnection(RxBleDevice device, Timeout timeout) {
 
-        Observable<RxBleConnection> conn = connectionCache.get(device.getMacAddress());
+        Observable<CachedLEConnection> conn = connectionCache.get(device.getMacAddress());
         if (conn != null) {
             return conn;
         }
-        BehaviorSubject<RxBleConnection> subject = BehaviorSubject.create();
+        BehaviorSubject<CachedLEConnection> subject = BehaviorSubject.create();
         connectionCache.put(device.getMacAddress(), subject);
         return device.establishConnection(false, timeout)
                 .doOnDispose(() -> connectionCache.remove(device.getMacAddress()))
                 .doOnError(err -> connectionCache.remove(device.getMacAddress()))
+                .map(CachedLEConnection::new)
                 .doOnNext(connection -> {
                     Log.v(TAG, "successfully established connection");
                     subject.onNext(connection);
                 });
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
