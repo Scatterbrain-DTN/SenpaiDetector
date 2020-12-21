@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                     connection.serverNotify(
                             LuidPacket.newBuilder().setLuid(UUID.randomUUID()).enableHashing().build(),
                             BluetoothLERadioModuleImpl.UUID_LUID
-                    );
+                    ).subscribe();
                     return establishConnection(device, new Timeout(10, TimeUnit.SECONDS))
                             .flatMapSingle(CachedLEConnection::readLuid)
                             .doOnNext(bytes -> Log.v(TAG, "received luid: " + bytes))
