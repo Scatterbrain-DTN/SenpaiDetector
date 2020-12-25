@@ -19,8 +19,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.uscatterbrain.DeviceProfile;
-import com.example.uscatterbrain.ScatterProto;
 import com.example.uscatterbrain.ScatterRoutingService;
+import com.example.uscatterbrain.network.AdvertisePacket;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
 import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                 UpgradePacket.newBuilder()
                         .setSessionID(1)
                         .setMetadata(WifiDirectRadioModule.UPGRADE_METADATA)
-                        .setProvides(ScatterProto.Advertise.Provides.WIFIP2P)
+                        .setProvides(AdvertisePacket.Provides.WIFIP2P)
                         .build());
         if (p2pdisposable != null) {
             p2pdisposable.dispose();
