@@ -42,6 +42,8 @@ import com.polidea.rxandroidble2.scan.ScanSettings;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -138,10 +140,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryP2pConnection(BluetoothLEModule.ConnectionRole role) {
-        WifiDirectBootstrapRequest request = WifiDirectBootstrapRequest.create(
-                WifiDirectBootstrapRequest.DEFAULT_NAME,
-                role
+        final Map<String, String> metadata = new HashMap<>();
+        metadata.putIfAbsent(WifiDirectBootstrapRequest.KEY_NAME, WifiDirectBootstrapRequest.DEFAULT_NAME);
+        metadata.putIfAbsent(
+                WifiDirectBootstrapRequest.KEY_PASSPHRASE,
+                "fmef is a secure passphrase"
                 );
+
+        UpgradePacket packet = UpgradePacket.parseFrom(UpgradePacket.newBuilder()
+                .setProvides(AdvertisePacket.Provides.WIFIP2P)
+                .setMetadata(metadata)
+                .setSessionID(1)
+                .build()
+                .writeToStream(10)).blockingGet();
+
+        WifiDirectBootstrapRequest request = WifiDirectBootstrapRequest.create(
+                packet,
+                role
+        );
+
         if (p2pdisposable != null) {
             p2pdisposable.dispose();
         }
