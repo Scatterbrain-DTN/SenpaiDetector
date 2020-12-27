@@ -28,6 +28,7 @@ import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl;
 import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 import com.example.uscatterbrain.network.bluetoothLE.CachedLEServerConnection;
+import com.example.uscatterbrain.network.wifidirect.WifiDirectBootstrapRequest;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
 import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.RxBleClient;
@@ -137,13 +138,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryP2pConnection(BluetoothLEModule.ConnectionRole role) {
-        BluetoothLEModule.UpgradeRequest request = BluetoothLEModule.UpgradeRequest.create(
-                role,
-                UpgradePacket.newBuilder()
-                        .setSessionID(1)
-                        .setMetadata(WifiDirectRadioModule.UPGRADE_METADATA)
-                        .setProvides(AdvertisePacket.Provides.WIFIP2P)
-                        .build());
+        WifiDirectBootstrapRequest request = WifiDirectBootstrapRequest.create(
+                WifiDirectBootstrapRequest.DEFAULT_NAME,
+                role
+                );
         if (p2pdisposable != null) {
             p2pdisposable.dispose();
         }
