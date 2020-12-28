@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMetadata(metadata)
                 .setSessionID(1)
                 .build()
-                .writeToStream(10)).blockingGet();
+                .writeToStream(20)).blockingGet();
 
         WifiDirectBootstrapRequest request = WifiDirectBootstrapRequest.create(
                 packet,
