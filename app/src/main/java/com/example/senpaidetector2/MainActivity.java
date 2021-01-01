@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mClientButton;
     private RxBleServer mServer;
     private boolean mBound;
+    private static final String BAD_PSK = "9XAqmPYDlNaDGcfv1inoOw==";
     private Disposable p2pdisposable;
     private Disposable manualDisposable = null;
     private final ConcurrentHashMap<String, Observable<CachedLEConnection>> connectionCache = new ConcurrentHashMap<>();
@@ -152,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         Log.e(TAG, "pass: " + p);
         metadata.putIfAbsent(
                 WifiDirectBootstrapRequest.KEY_PASSPHRASE,
-                p
+                BAD_PSK
                 );
 
         UpgradePacket packet = UpgradePacket.parseFrom(UpgradePacket.newBuilder()
