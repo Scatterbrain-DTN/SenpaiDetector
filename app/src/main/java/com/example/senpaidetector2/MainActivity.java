@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,6 +23,7 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.AdvertisePacket;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
+import com.example.uscatterbrain.network.LibsodiumInterface;
 import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
@@ -142,9 +144,15 @@ public class MainActivity extends AppCompatActivity {
     private void tryP2pConnection(BluetoothLEModule.ConnectionRole role) {
         final Map<String, String> metadata = new HashMap<>();
         metadata.putIfAbsent(WifiDirectBootstrapRequest.KEY_NAME, WifiDirectBootstrapRequest.DEFAULT_NAME);
+        byte[] pass = new byte[16];
+        for (byte i=0;i<16;i++) {
+            pass[i] = i;
+        }
+        String p = Base64.encodeToString(pass, Base64.NO_WRAP);
+        Log.e(TAG, "pass: " + p);
         metadata.putIfAbsent(
                 WifiDirectBootstrapRequest.KEY_PASSPHRASE,
-                "fmef is a secure passphrase"
+                p
                 );
 
         UpgradePacket packet = UpgradePacket.parseFrom(UpgradePacket.newBuilder()
@@ -152,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 .setMetadata(metadata)
                 .setSessionID(1)
                 .build()
-                .writeToStream(10)).blockingGet();
+                .writeToStream(20)).blockingGet();
 
         WifiDirectBootstrapRequest request = WifiDirectBootstrapRequest.create(
                 packet,
