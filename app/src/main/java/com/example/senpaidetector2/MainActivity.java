@@ -23,7 +23,6 @@ import com.example.uscatterbrain.DeviceProfile;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.network.AdvertisePacket;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
-import com.example.uscatterbrain.network.LibsodiumInterface;
 import com.example.uscatterbrain.network.LuidPacket;
 import com.example.uscatterbrain.network.UpgradePacket;
 import com.example.uscatterbrain.network.bluetoothLE.BluetoothLEModule;
@@ -32,7 +31,6 @@ import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 import com.example.uscatterbrain.network.bluetoothLE.CachedLEServerConnection;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectBootstrapRequest;
 import com.example.uscatterbrain.network.wifidirect.WifiDirectRadioModule;
-import com.google.protobuf.ByteString;
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleDevice;
 import com.polidea.rxandroidble2.RxBleServer;
@@ -85,10 +83,10 @@ public class MainActivity extends AppCompatActivity {
             .setHashes(new ArrayList<>())
             .setSessionID(1)
             .setExtension("fmef")
-            .setSig(ByteString.copyFrom(new byte[8]))
+            .setSig(null)
             .setToDisk(true)
-            .setFromFingerprint(ByteString.copyFrom(new byte[8]))
-            .setToFingerprint(ByteString.copyFrom(new byte[8]))
+            .setFromFingerprint(null)
+            .setToFingerprint(null)
             .build();
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -174,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         }
         p2pdisposable = mService.getWifiDirect().bootstrapFromUpgrade(
                 request,
-                Observable.just(new WifiDirectRadioModule.BlockDataStream(
+                Flowable.just(new WifiDirectRadioModule.BlockDataStream(
                         headerPacket,
                         Flowable.empty()
                 ))
