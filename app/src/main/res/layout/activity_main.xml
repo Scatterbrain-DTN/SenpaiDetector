@@ -83,6 +83,17 @@
             app:layout_constraintEnd_toStartOf="@id/creategroupbutton"
             app:layout_constraintTop_toBottomOf="@+id/updatelogsbutton" />
 
+
+        <Button
+            android:id="@+id/wipedata"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="wipe data"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/connectgroupbutton"
+            app:layout_constraintTop_toBottomOf="@+id/manual_client" />
+
         <Button
             android:id="@+id/scanbutton"
             android:layout_width="wrap_content"

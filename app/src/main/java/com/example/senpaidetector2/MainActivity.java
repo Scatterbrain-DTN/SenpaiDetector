@@ -6,7 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.FileObserver;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.ParcelUuid;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
@@ -40,6 +43,7 @@ import com.polidea.rxandroidble2.scan.ScanFilter;
 import com.polidea.rxandroidble2.scan.ScanSettings;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,11 +52,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 
 import static com.example.uscatterbrain.network.bluetoothLE.BluetoothLERadioModuleImpl.SERVICE_UUID;
@@ -71,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mCreateGroupButton;
     private Button mManualButton;
     private Button mClientButton;
+    private Button mDeleteAllButton;
     private RxBleServer mServer;
     private boolean mBound;
     private static final String BAD_PSK = "9XAqmPYDlNaDGcfv1inoOw==";
@@ -246,6 +253,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void deleteAll(File dir) {
+        if (dir.isDirectory())
+        {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++)
+            {
+                new File(dir, children[i]).delete();
+            }
+        }
+    }
+
+
+    private void wipeDatastore() {
+        mService.getDatastore().clear();
+        File userdir = mService.getDatastore().getUserDir();
+        File cachedir = mService.getDatastore().getCacheDir();
+        deleteAll(userdir);
+        deleteAll(cachedir);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -262,6 +289,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mDeleteAllButton = (Button) findViewById(R.id.wipedata);
+        mDeleteAllButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Completable.fromAction(() -> wipeDatastore())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe();
+            }
+        });
 
         mConnectGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
