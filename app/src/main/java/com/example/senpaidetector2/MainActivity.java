@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                         Flowable.empty()
                 ))
         ).subscribe(
-                ok -> Log.v(TAG, "successfually transfered blockdata"),
+                () -> Log.v(TAG, "successfually transfered blockdata"),
                 err -> {
                     Log.e(TAG, "failed to transfer blockdata: " + err);
                 }
