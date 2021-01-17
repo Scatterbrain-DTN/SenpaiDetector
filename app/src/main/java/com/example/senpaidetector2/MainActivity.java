@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scan() {
         if (mService != null && mBound) {
-            mService.getRadioModule().startDiscover(BluetoothLEModule.discoveryOptions.OPT_DISCOVER_FOREVER);
+            mService.getRadioModule().startDiscover(BluetoothLEModule.discoveryOptions.OPT_DISCOVER_ONCE);
         }
     }
 
