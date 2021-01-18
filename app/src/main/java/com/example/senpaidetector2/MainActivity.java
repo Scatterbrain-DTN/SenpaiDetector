@@ -101,13 +101,10 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             ScatterRoutingService.ScatterBinder binder = (ScatterRoutingService.ScatterBinder) service;
             mService = binder.getService();
-            DeviceProfile dp = new DeviceProfile(DeviceProfile.HardwareServices.BLUETOOTHLE, UUID.randomUUID());
-            mService.setProfile(dp);
             mBound = true;
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("RUNNING");
-            mService.scanOn(null);
-            mService.advertiseOn();
+            mService.getRadioModule().startAdvertise();
             mService.getRadioModule().startServer();
             mStatusTextView.setText("DISCOVERING");
             Log.v(TAG, "connected to ScatterRoutingService binder");
@@ -317,7 +314,6 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(!isChecked) {
                     if(mBound) {
-                        mService.scanOff(null);
                         mStatusTextView.setText("STOPPED");
                         unbindService(mServiceConnection);
                     }
