@@ -63,36 +63,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/status" />
 
-        <Button
-            android:id="@+id/creategroupbutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="create group"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/updatelogsbutton" />
-
-        <Button
-            android:id="@+id/connectgroupbutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="connect group"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/creategroupbutton"
-            app:layout_constraintTop_toBottomOf="@+id/updatelogsbutton" />
-
-
-        <Button
-            android:id="@+id/wipedata"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="wipe data"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/connectgroupbutton"
-            app:layout_constraintTop_toBottomOf="@+id/manual_client" />
 
         <Button
             android:id="@+id/scanbutton"
@@ -105,27 +75,6 @@
             app:layout_constraintTop_toBottomOf="@+id/statustext"
             app:layout_constraintVertical_bias="0.526" />
 
-        <Button
-            android:id="@+id/manualbutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:text="Manual"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/manual_client"
-            app:layout_constraintTop_toBottomOf="@+id/statustext"
-            app:layout_constraintVertical_bias="0.526" />
-
-        <Button
-            android:id="@+id/manual_client"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
-            android:text="client"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/scanbutton"
-            app:layout_constraintTop_toBottomOf="@+id/statustext"
-            app:layout_constraintVertical_bias="0.526" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
