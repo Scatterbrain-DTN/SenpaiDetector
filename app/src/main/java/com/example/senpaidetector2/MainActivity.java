@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -17,14 +18,19 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.uscatterbrain.API.ScatterMessage;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.ScatterbrainAPI;
 import com.example.uscatterbrain.network.BlockHeaderPacket;
 import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.reactivex.Observable;
@@ -57,6 +63,34 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             binder = ScatterbrainAPI.Stub.asInterface(service);
+            try {
+                File f = File.createTempFile("fmef", "gleep");
+                byte[] contents = new byte[128];
+                new Random().nextBytes(contents);
+                new FileOutputStream(f).write(contents);
+
+                binder.sendMessage(ScatterMessage.newBuilder()
+                        .setApplication("fmef")
+                        .setFile(f, ParcelFileDescriptor.MODE_READ_WRITE)
+                        .setTo(null)
+                        .setFrom(null)
+                        .build()
+                );
+
+                byte[] body = new byte[128];
+                new Random().nextBytes(body);
+                binder.sendMessage(ScatterMessage.newBuilder()
+                        .setApplication("fmef")
+                        .setBody(body)
+                        .setFrom(null)
+                        .setTo(null)
+                        .build()
+                );
+            } catch (RemoteException e) {
+                Log.e(TAG, "remoteExceptions: " + e);
+            } catch (IOException e) {
+                Log.e(TAG, "api ioexception " + e);
+            }
             mBound = true;
             mServiceToggle.setChecked(true);
             mStatusTextView.setText("DISCOVERING");
