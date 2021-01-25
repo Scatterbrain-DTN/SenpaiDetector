@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.uscatterbrain.API.Identity;
 import com.example.uscatterbrain.API.ScatterMessage;
 import com.example.uscatterbrain.ScatterRoutingService;
 import com.example.uscatterbrain.ScatterbrainAPI;
@@ -84,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
                         .setBody(body)
                         .setFrom(null)
                         .setTo(null)
+                        .build()
+                );
+
+
+                binder.insertIdentity(
+                        Identity.newBuilder()
+                        .setName("fmef")
+                        .sign(Identity.newPrivateKey())
                         .build()
                 );
             } catch (RemoteException e) {
