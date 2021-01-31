@@ -173,6 +173,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+        Button manualButton = findViewById(R.id.serveronlybutton);
+        manualButton.setOnClickListener(click -> {
+            try {
+                binder.startPassive();
+            } catch (RemoteException e) {
+                Log.e(TAG, "remoteException, failed to start passive mode");
+            }
+        });
+
         mServiceToggle.setChecked(true);
 
         mScanButton= (Button) findViewById(R.id.scanbutton);
