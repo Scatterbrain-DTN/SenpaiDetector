@@ -87,14 +87,6 @@ public class MainActivity extends AppCompatActivity {
                         .setTo(null)
                         .build()
                 );
-
-
-                binder.insertIdentity(
-                        Identity.newBuilder()
-                        .setName("fmef")
-                        .sign(Identity.newPrivateKey())
-                        .build()
-                );
             } catch (RemoteException e) {
                 Log.e(TAG, "remoteExceptions: " + e);
             } catch (IOException e) {
