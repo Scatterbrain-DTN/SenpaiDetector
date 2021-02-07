@@ -1,4 +1,4 @@
-package com.example.senpaidetector2;
+package net.ballmerlabs.senpaidetector2;
 
 import android.content.Context;
 

@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:targetSdkVersion="23">
-        <activity android:name=".MainActivity">
+        <activity android:name="net.ballmerlabs.senpaidetector2.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

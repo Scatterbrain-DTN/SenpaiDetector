@@ -1,4 +1,4 @@
-package com.example.senpaidetector2;
+package net.ballmerlabs.senpaidetector2;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -18,12 +18,13 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.uscatterbrain.API.Identity;
-import com.example.uscatterbrain.API.ScatterMessage;
-import com.example.uscatterbrain.ScatterRoutingService;
-import com.example.uscatterbrain.ScatterbrainAPI;
-import com.example.uscatterbrain.network.BlockHeaderPacket;
-import com.example.uscatterbrain.network.bluetoothLE.CachedLEConnection;
+import com.example.senpaidetector2.R;
+
+import net.ballmerlabs.uscatterbrain.API.ScatterMessage;
+import net.ballmerlabs.uscatterbrain.ScatterRoutingService;
+import net.ballmerlabs.uscatterbrain.ScatterbrainAPI;
+import net.ballmerlabs.uscatterbrain.network.BlockHeaderPacket;
+import net.ballmerlabs.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 
 import java.io.BufferedReader;
 import java.io.File;
