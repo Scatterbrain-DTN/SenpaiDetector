@@ -1,4 +1,4 @@
-include ':scatterbrainSDK'
 include ':app'
 include ':uScatterbrain:app'
+include ':uScatterbrain:scatterbrainSDK'
 rootProject.name='SenpaiDetector2'

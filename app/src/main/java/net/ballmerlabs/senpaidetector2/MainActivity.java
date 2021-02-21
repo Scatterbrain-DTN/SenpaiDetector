@@ -20,9 +20,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.senpaidetector2.R;
 
-import net.ballmerlabs.uscatterbrain.API.ScatterMessage;
+import net.ballmerlabs.scatterbrainsdk.ScatterMessage;
+import net.ballmerlabs.scatterbrainsdk.ScatterbrainAPI;
 import net.ballmerlabs.uscatterbrain.ScatterRoutingService;
-import net.ballmerlabs.uscatterbrain.ScatterbrainAPI;
 import net.ballmerlabs.uscatterbrain.network.BlockHeaderPacket;
 import net.ballmerlabs.uscatterbrain.network.bluetoothLE.CachedLEConnection;
 

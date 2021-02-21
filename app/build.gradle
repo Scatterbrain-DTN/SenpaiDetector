@@ -6,7 +6,7 @@ android {
     buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.example.senpaidetector2"
-        minSdkVersion 26
+        minSdkVersion 29
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -38,6 +38,7 @@ dependencies {
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation project(':uScatterbrain:app')
+    implementation project(':uScatterbrain:scatterbrainSDK')
     implementation "com.polidea.rxandroidble2:rxandroidble:1.11.1"
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'com.google.protobuf:protobuf-javalite:3.11.1'
