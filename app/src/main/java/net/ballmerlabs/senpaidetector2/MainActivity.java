@@ -49,17 +49,6 @@ public class MainActivity extends AppCompatActivity {
     private ScatterbrainAPI binder;
     private boolean mBound;
     private final ConcurrentHashMap<String, Observable<CachedLEConnection>> connectionCache = new ConcurrentHashMap<>();
-    private static final BlockHeaderPacket headerPacket = BlockHeaderPacket.newBuilder()
-            .setApplication("fmef".getBytes())
-            .setBlockSize(512)
-            .setHashes(new ArrayList<>())
-            .setSessionID(1)
-            .setExtension("fmef")
-            .setSig(null)
-            .setToDisk(true)
-            .setFromFingerprint(null)
-            .setToFingerprint(null)
-            .build();
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
