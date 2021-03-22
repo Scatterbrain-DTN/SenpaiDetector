@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.senpaidetector2.R;
 
+import net.ballmerlabs.scatterbrainsdk.Identity;
 import net.ballmerlabs.scatterbrainsdk.ScatterMessage;
 import net.ballmerlabs.scatterbrainsdk.ScatterbrainAPI;
 import net.ballmerlabs.uscatterbrain.ScatterRoutingService;
@@ -77,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
                         .setTo(null)
                         .build()
                 );
+
+                Identity identity = binder.generateIdentity("fmef");
+                boolean b = binder.removeIdentity(identity.getFingerprint());
+                Log.v(TAG, "removed identity " + b);
             } catch (RemoteException e) {
                 Log.e(TAG, "remoteExceptions: " + e);
             } catch (IOException e) {
